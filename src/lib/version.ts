@@ -67,7 +67,7 @@ const VERSIONS_INTERNAL = versionsString.split("\n").map((v) => {
 });
 
 export const Versions = VERSIONS_INTERNAL.reduce((acc, v) => {
-  const key = `JAVA_${v.version.replace(".", "_")}` as keyof JavaVersions;
+  const key = `JAVA_${v.version.replace(/\./g, "_")}` as keyof JavaVersions;
   acc[key] = v;
   return acc;
 }, {} as JavaVersions);
