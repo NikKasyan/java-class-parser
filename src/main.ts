@@ -1,4 +1,8 @@
-import { parseRawClassFileWithOffsets } from "./lib/raw-class-parser";
+import { extractFromRawClassFile } from "./lib/class-parser";
+import {
+  parseRawClassFile,
+  parseRawClassFileWithOffsetsFromRawFile,
+} from "./lib/raw-class-parser";
 
 const input = document.querySelector<HTMLInputElement>("input")!;
 const outputHex = document.querySelector<HTMLPreElement>("#output-hex")!;
@@ -23,8 +27,15 @@ const readFile = (file: File) => {
   reader.onload = () => {
     const content = reader.result as ArrayBuffer;
     const array = new Uint8Array(content);
-    const parsed = parseRawClassFileWithOffsets(array);
+    const rawClass = parseRawClassFile(array);
+    const parsedRawWithOffsets = parseRawClassFileWithOffsetsFromRawFile(
+      rawClass,
+      array
+    );
+    const parsed = extractFromRawClassFile(rawClass, false);
     outputHex.textContent = formatHex(array);
+    console.log(parsedRawWithOffsets);
+    console.log(rawClass);
     console.log(parsed);
   };
 
