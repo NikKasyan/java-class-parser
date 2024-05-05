@@ -14,13 +14,13 @@ export const newReader = (array: Uint8Array, startOffset = 0): Reader => {
   let offset = startOffset;
   const readUint8 = () => {
     if (array.length < offset + 1) throw new Error("Invalid byte length");
-    return array[offset++];
+    return array[offset++] & 0xff;
   };
   const readUint16 = () => {
     if (array.length < offset + 2) throw new Error("Invalid byte length");
     const value = (array[offset] << 8) | array[offset + 1];
     offset += 2;
-    return value;
+    return value & 0xffff;
   };
   const readUint32 = () => {
     if (array.length < offset + 4) throw new Error("Invalid byte length");
@@ -30,7 +30,7 @@ export const newReader = (array: Uint8Array, startOffset = 0): Reader => {
       (array[offset + 2] << 8) |
       array[offset + 3];
     offset += 4;
-    return value;
+    return value & 0xffffffff;
   };
   const readUint64 = () => {
     if (array.length < offset + 8) throw new Error("Invalid byte length");
