@@ -1,3 +1,13 @@
+import {
+  validateAccessFlags,
+  validateConstantPool,
+  validateFieldsCount,
+  validateInterfacesCount,
+  validateMagic,
+  validateMethodsCount,
+  validateThisClass,
+  validateVersion,
+} from "./class-file-validation";
 import { Reader, newReader } from "./reader";
 import { ConstPoolInfo, ConstPoolTag } from "./types/raw/const-pool";
 import { WithOffsets } from "./types/raw/debug";
@@ -9,33 +19,81 @@ import {
   RawMethodInfos,
 } from "./types/raw/raw-class";
 
-export const parseRawClassFile = (bytes: Uint8Array): RawClassFile => {
+const createOffsetLogger = (reader: Reader, enabled: boolean) => {
+  if (!enabled) {
+    return () => {};
+  }
+  return (message: string) => {
+    console.log(message, reader.offset());
+  };
+};
+
+export const parseRawClassFile = (
+  bytes: Uint8Array,
+  logOffsets = false
+): RawClassFile => {
   const reader = newReader(bytes);
+  const logOffset = createOffsetLogger(reader, logOffsets);
+
   const magic = reader.readUint32();
+  validateMagic(magic);
+  logOffset("Magic");
+
   const minorVersion = reader.readUint16();
   const majorVersion = reader.readUint16();
+  validateVersion(majorVersion, minorVersion);
+  logOffset("Version");
+
   const constantPoolCount = reader.readUint16() - 1;
+  logOffset("Constant pool count");
+
   const constantPool: RawConstantPool = parseConstantPool(
     reader,
     constantPoolCount
   );
+  validateConstantPool(constantPool, majorVersion);
+  logOffset("Constant pool");
+
   const accessFlags = reader.readUint16();
+  validateAccessFlags(accessFlags, majorVersion);
+  logOffset("Access flags");
+
   const thisClass = reader.readUint16();
+  validateThisClass(thisClass, constantPool, accessFlags);
+  logOffset("This class");
+
   const superClass = reader.readUint16();
+  validateThisClass(superClass, constantPool, accessFlags);
+  logOffset("Super class");
+
   const interfacesCount = reader.readUint16();
+  validateInterfacesCount(interfacesCount, accessFlags);
+  logOffset("Interfaces count");
+
   const interfaces = Array.from({ length: interfacesCount }).map(() =>
     reader.readUint16()
   );
+  logOffset("Interfaces");
+
   const fieldsCount = reader.readUint16();
+  validateFieldsCount(fieldsCount, accessFlags);
+  logOffset("Fields count");
 
   const fields = parseFields(reader, fieldsCount);
-
+  //validateFields(fields, constantPool, accessFlags);
+  logOffset("Fields");
   const methodsCount = reader.readUint16();
+  validateMethodsCount(methodsCount, accessFlags);
+  logOffset("Methods count");
 
   const methods = parseMethods(reader, methodsCount);
+  //validateMethods(methods, constantPool, accessFlags);
+  logOffset("Methods");
   const attributesCount = reader.readUint16();
+  logOffset("Attributes count");
 
   const attributes = parseAttributes(reader, attributesCount);
+  logOffset("Attributes");
 
   return {
     magic,
@@ -205,7 +263,7 @@ type RawClassFileWithOffsets = WithOffsets<RawClassFile>;
 export const parseRawClassFileWithOffsets = (
   bytes: Uint8Array
 ): RawClassFileWithOffsets => {
-  const rawClassFile = parseRawClassFile(bytes);
+  const rawClassFile = parseRawClassFile(bytes, false);
   return parseRawClassFileWithOffsetsFromRawFile(rawClassFile, bytes);
 };
 
@@ -338,6 +396,7 @@ export const parseRawClassFileWithOffsetsFromRawFile = (
   };
 
   if (offset !== bytes.length) {
+    console.error(rawClassFile, rawClasswithOffsets);
     throw new Error(
       `Offset mismatch. Expected ${bytes.length} but got ${offset}`
     );
@@ -560,7 +619,9 @@ const createFieldsWithOffsets = (
   let startOffset = offset;
   const fieldsWithOffsets: WithOffsets<RawFieldInfos>["value"] = fields.map(
     (fieldInfo) => {
-      return createFieldWithOffsets(fieldInfo, offset);
+      const field = createFieldWithOffsets(fieldInfo, offset);
+      offset += field.numberOfBytes;
+      return field;
     }
   );
   let endOffset = offset;

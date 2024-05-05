@@ -44,6 +44,7 @@ import {
   VerificationTypeInfoTag,
 } from "./types/attributes";
 import { ModuleAttribute } from "./types/attributes/module";
+import { parseUtf8 } from "./types/bytes";
 import {
   AttributeInfoWithRaw,
   ClassFile,
@@ -169,7 +170,7 @@ const extractConstantValue = (constant: ConstPoolInfo): unknown => {
         descriptorIndex: constant.descriptorIndex,
       };
     case ConstPoolTag.Utf8:
-      return new TextDecoder().decode(constant.bytes);
+      return parseUtf8(constant.bytes);
     case ConstPoolTag.MethodHandle:
       return {
         referenceKind: constant.referenceKind,
