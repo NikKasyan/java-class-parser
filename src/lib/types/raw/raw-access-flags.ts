@@ -13,7 +13,11 @@ export const ClassAccessFlags = {
   ACC_SYNTHETIC: 0x1000 as AccessFlag,
   ACC_ANNOTATION: 0x2000 as AccessFlag,
   ACC_ENUM: 0x4000 as AccessFlag,
+  ACC_MODULE: 0x8000 as AccessFlag,
 } as const;
+
+export const AllClassAccessFlags =
+  Object.values(ClassAccessFlags).reduce((acc, flag) => acc | flag, 0) & 0xffff;
 
 export const ClassAccessFlagNames = {
   [ClassAccessFlags.ACC_PUBLIC]: "ACC_PUBLIC",

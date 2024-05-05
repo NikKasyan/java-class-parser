@@ -52,6 +52,10 @@ export class ClassAccessFlags {
     return hasAccessFlag(this.flags, RawClassAccessFlags.ACC_ENUM);
   }
 
+  get isModule(): boolean {
+    return hasAccessFlag(this.flags, RawClassAccessFlags.ACC_MODULE);
+  }
+
   get flagNames(): string[] {
     return extractClassAccessFlagNames(this.flags);
   }
