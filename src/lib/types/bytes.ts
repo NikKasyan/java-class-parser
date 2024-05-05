@@ -35,6 +35,9 @@ const parseModifiedUtf8Internal = (
   const codePoints = [];
   for (let i = 0; i < slice.length; i++) {
     const byte = slice[i];
+    if (byte === 0 || byte > 0x7f) {
+      throw new Error("Invalid UTF-8 encoding");
+    }
     if (byte < 0x80) {
       codePoints.push(byte);
     } else {
