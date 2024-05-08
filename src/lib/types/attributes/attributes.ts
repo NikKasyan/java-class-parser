@@ -117,3 +117,12 @@ export const Attributes = Object.entries(AttributesInternal).reduce(
 export type AttributeStructBase = {
   attributeLength: UInt32;
 };
+
+type AttributeNamesType = Record<
+  keyof typeof AttributesInternal,
+  keyof typeof AttributesInternal
+>;
+export const AttributeNames = Object.keys(AttributesInternal).reduce(
+  (acc, prev) => ({ ...acc, prev }),
+  {}
+) as AttributeNamesType;
