@@ -541,6 +541,7 @@ const extractAttributeByName = (
         ),
       };
     default:
+      //Todo: Should Ignore new attributes with unknown names
       throw new Error(`Unknown attribute: ${name}`);
   }
 };
