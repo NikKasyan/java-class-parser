@@ -1,12 +1,6 @@
 import {
-  validateAccessFlags,
-  validateConstantPool,
-  validateFieldsCount,
-  validateInterfacesCount,
-  validateMagic,
   validateMethodsCount,
-  validateThisClass,
-  validateVersion,
+  validateRawClass,
 } from "./class-file-validation";
 import { Reader, newReader } from "./reader";
 import { ConstPoolInfo, ConstPoolTag } from "./types/raw/const-pool";
@@ -30,18 +24,19 @@ const createOffsetLogger = (reader: Reader, enabled: boolean) => {
 
 export const parseRawClassFile = (
   bytes: Uint8Array,
-  logOffsets = false
+  logOffsets = false,
+  validateClass = false
 ): RawClassFile => {
   const reader = newReader(bytes);
   const logOffset = createOffsetLogger(reader, logOffsets);
 
   const magic = reader.readUint32();
-  validateMagic(magic);
+
   logOffset("Magic");
 
   const minorVersion = reader.readUint16();
   const majorVersion = reader.readUint16();
-  validateVersion(majorVersion, minorVersion);
+
   logOffset("Version");
 
   const constantPoolCount = reader.readUint16() - 1;
@@ -51,23 +46,23 @@ export const parseRawClassFile = (
     reader,
     constantPoolCount
   );
-  validateConstantPool(constantPool, majorVersion);
+
   logOffset("Constant pool");
 
   const accessFlags = reader.readUint16();
-  validateAccessFlags(accessFlags, majorVersion);
+
   logOffset("Access flags");
 
   const thisClass = reader.readUint16();
-  validateThisClass(thisClass, constantPool, accessFlags);
+
   logOffset("This class");
 
   const superClass = reader.readUint16();
-  validateThisClass(superClass, constantPool, accessFlags);
+
   logOffset("Super class");
 
   const interfacesCount = reader.readUint16();
-  validateInterfacesCount(interfacesCount, accessFlags);
+
   logOffset("Interfaces count");
 
   const interfaces = Array.from({ length: interfacesCount }).map(() =>
@@ -76,12 +71,13 @@ export const parseRawClassFile = (
   logOffset("Interfaces");
 
   const fieldsCount = reader.readUint16();
-  validateFieldsCount(fieldsCount, accessFlags);
+
   logOffset("Fields count");
 
   const fields = parseFields(reader, fieldsCount);
   // validateFields(fields, constantPool, accessFlags);
   logOffset("Fields");
+
   const methodsCount = reader.readUint16();
   validateMethodsCount(methodsCount, accessFlags);
   logOffset("Methods count");
@@ -89,13 +85,14 @@ export const parseRawClassFile = (
   const methods = parseMethods(reader, methodsCount);
   //validateMethods(methods, constantPool, accessFlags);
   logOffset("Methods");
+
   const attributesCount = reader.readUint16();
   logOffset("Attributes count");
 
   const attributes = parseAttributes(reader, attributesCount);
   logOffset("Attributes");
 
-  return {
+  const rawClass = {
     magic,
     minorVersion,
     majorVersion,
@@ -113,6 +110,8 @@ export const parseRawClassFile = (
     attributesCount,
     attributes,
   };
+  if (validateClass) validateRawClass(rawClass);
+  return rawClass;
 };
 
 const parseConstantPool = (reader: Reader, count: number) => {
