@@ -440,11 +440,13 @@ const extractAttributeByName = (
         numBootstrapMethods,
         bootstrapMethods: Array.from({ length: numBootstrapMethods }).map(
           () => {
+            const bootstrapMethodRef = reader.readUint16();
+            const numBootstrapArguments = reader.readUint16();
             return {
-              bootstrapMethodRef: reader.readUint16(),
-              numBootstrapArguments: reader.readUint16(),
+              bootstrapMethodRef,
+              numBootstrapArguments,
               bootstrapArguments: Array.from({
-                length: reader.readUint16(),
+                length: numBootstrapArguments,
               }).map(() => reader.readUint16()),
             };
           }
