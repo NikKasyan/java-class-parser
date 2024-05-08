@@ -9,11 +9,7 @@ import {
   validateVersion,
 } from "./class-file-validation";
 import { Reader, newReader } from "./reader";
-import {
-  ConstPoolInfo,
-  ConstPoolTag,
-  isValidMethodHandleReferenceKind,
-} from "./types/raw/const-pool";
+import { ConstPoolInfo, ConstPoolTag } from "./types/raw/const-pool";
 import { WithOffsets } from "./types/raw/debug";
 import {
   RawAttributeInfos,
@@ -152,7 +148,7 @@ const parseConstantPoolInfo = (
 ): ConstPoolInfo => {
   switch (tag) {
     case ConstPoolTag.Class:
-      return { tag, nameIndex: reader.readUint16() }; // Todo: Validate name index is in constpool
+      return { tag, nameIndex: reader.readUint16() };
     case ConstPoolTag.FieldRef:
     case ConstPoolTag.MethodRef:
     case ConstPoolTag.InterfaceMethodRef:
@@ -189,11 +185,6 @@ const parseConstantPoolInfo = (
       };
     case ConstPoolTag.MethodHandle:
       const referenceKind = reader.readUint8();
-      if (isValidMethodHandleReferenceKind(referenceKind) === false) {
-        throw new Error(
-          `Invalid method handle reference kind: ${referenceKind}`
-        );
-      }
       return {
         tag,
         referenceKind: referenceKind,

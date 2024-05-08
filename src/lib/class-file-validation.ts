@@ -4,6 +4,7 @@ import {
   ConstPoolInfoType,
   ConstPoolTag,
   ConstPoolTags,
+  isValidMethodHandleReferenceKind,
 } from "./types/raw/const-pool";
 import {
   VoidTypes,
@@ -143,7 +144,13 @@ const validateConstantPoolEntry = (
       // validateUtf8Info(constPool, info, index);
       break;
     case ConstPoolTag.MethodHandle:
-      //validateMethodHandleInfo(constPool, info, index);
+      const referenceKind = info.referenceKind;
+      if (isValidMethodHandleReferenceKind(referenceKind) === false) {
+        throw new Error(
+          `Invalid method handle reference kind: ${referenceKind}`
+        );
+      }
+      // Todo: Page 95 of the JVM specification
       break;
     case ConstPoolTag.MethodType:
       //validateMethodTypeInfo(constPool, info, index);
