@@ -9,7 +9,11 @@ import {
   validateVersion,
 } from "./class-file-validation";
 import { Reader, newReader } from "./reader";
-import { ConstPoolInfo, ConstPoolTag } from "./types/raw/const-pool";
+import {
+  ConstPoolInfo,
+  ConstPoolTag,
+  isValidMethodHandleReferenceKind,
+} from "./types/raw/const-pool";
 import { WithOffsets } from "./types/raw/debug";
 import {
   RawAttributeInfos,
@@ -80,7 +84,7 @@ export const parseRawClassFile = (
   logOffset("Fields count");
 
   const fields = parseFields(reader, fieldsCount);
-  //validateFields(fields, constantPool, accessFlags);
+  // validateFields(fields, constantPool, accessFlags);
   logOffset("Fields");
   const methodsCount = reader.readUint16();
   validateMethodsCount(methodsCount, accessFlags);
@@ -184,9 +188,15 @@ const parseConstantPoolInfo = (
         bytes,
       };
     case ConstPoolTag.MethodHandle:
+      const referenceKind = reader.readUint8();
+      if (isValidMethodHandleReferenceKind(referenceKind) === false) {
+        throw new Error(
+          `Invalid method handle reference kind: ${referenceKind}`
+        );
+      }
       return {
         tag,
-        referenceKind: reader.readUint8(),
+        referenceKind: referenceKind,
         referenceIndex: reader.readUint16(),
       };
     case ConstPoolTag.MethodType:

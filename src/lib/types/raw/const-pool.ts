@@ -1,5 +1,5 @@
 import { Versions } from "../../version";
-import { UInt16, UInt32, UInt8 } from "../bytes";
+import { UInt16, UInt32 } from "../bytes";
 import { Version } from "../version";
 import { WithOffsets } from "./debug";
 
@@ -216,9 +216,25 @@ type ConstantUtf8Info = {
   bytes: Uint8Array;
 };
 
+export enum MethodHandleReferenceKind {
+  GetField = 1,
+  GetStatic = 2,
+  PutField = 3,
+  PutStatic = 4,
+  InvokeVirtual = 5,
+  InvokeStatic = 6,
+  InvokeSpecial = 7,
+  NewInvokeSpecial = 8,
+  InvokeInterface = 9,
+}
+
+export const isValidMethodHandleReferenceKind = (
+  kind: number
+): kind is MethodHandleReferenceKind => kind >= 1 && kind <= 9;
+
 type ConstantMethodHandleInfo = {
   tag: ConstPoolTag.MethodHandle;
-  referenceKind: UInt8;
+  referenceKind: MethodHandleReferenceKind;
   referenceIndex: UInt16;
 };
 
