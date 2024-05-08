@@ -54,6 +54,9 @@ export const FieldAccessFlagNames = {
   [FieldAccessFlags.ACC_ENUM]: "ACC_ENUM",
 } as const;
 
+export const AllFieldAccessFlags =
+  Object.values(FieldAccessFlags).reduce((acc, flag) => acc | flag, 0) & 0xffff;
+
 export const MethodAccessFlags = {
   ACC_PUBLIC: 0x0001 as AccessFlag,
   ACC_PRIVATE: 0x0002 as AccessFlag,
@@ -151,9 +154,38 @@ export const hasAccessFlag = (
 
 export const hasAccessFlags = (
   flagsToCheck: number,
-  flags: AccessFlag[]
+  ...flags: AccessFlag[]
 ): boolean => {
   return flags.every((flag) => hasAccessFlag(flagsToCheck, flag));
+};
+
+export const hasExactlyOneOfAccessFlags = (
+  flagsToCheck: number,
+  ...flags: AccessFlag[]
+) => {
+  return flags
+    .map((f) => hasAccessFlag(flagsToCheck, f))
+    .reduce((acc, c) => acc !== c, false);
+};
+export const hasAtMostOneOfAccessFlags = (
+  flagsToCheck: number,
+  ...flags: AccessFlag[]
+) => {
+  const setFlags = flags.map((f) => hasAccessFlag(flagsToCheck, f));
+  const hasOneSet = setFlags.reduce((a, c) => a !== c, false);
+  const hasNoneSet = setFlags.every((f) => f === false);
+
+  return hasOneSet || hasNoneSet;
+};
+
+export const hasAnyAccessFlagsOf = (
+  flagsToCheck: number,
+  ...flags: AccessFlag[]
+) => {
+  for (const flag of flags) {
+    if (hasAccessFlag(flagsToCheck, flag)) return true;
+  }
+  return false;
 };
 
 export const extractClassAccessFlags = (flags: number): AccessFlag[] => {
